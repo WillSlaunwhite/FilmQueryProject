@@ -107,6 +107,10 @@ public class DatabaseAccessorObject implements DatabaseAccessor {
 				actor.setLastName(rs.getString("last_name"));
 				filmActors.add(actor);
 			}
+			
+			conn.close();
+			stmt.close();
+			rs.close();
 
 		} catch (SQLException e) {
 			System.err.println("Database error - actors by film id");
@@ -120,6 +124,46 @@ public class DatabaseAccessorObject implements DatabaseAccessor {
 		return filmActors;
 	}
 	
+	public List<Film> findFilmBySearch(String term) {
+		List<Film> movies = new ArrayList<Film>();
+		
+		try {
+			Connection conn = DriverManager.getConnection(URL, user, pass);
+			String sql = "SELECT film.title, film.id, film.release_year, film.rating, film.description, language.name "
+					+ "FROM film JOIN language on film.language_id = language.id;";
+			
+			PreparedStatement stmt = conn.prepareStatement(sql);
+			ResultSet rs = stmt.executeQuery();
+
+			
+			while(rs.next()) {
+				Film film = new Film();
+				film = new Film();
+				
+				
+				film.setId(rs.getInt("id"));
+				film.setTitle(rs.getString("title"));
+				film.setReleaseYear(rs.getInt("release_year"));
+//				film.setLanguageId(rs.getInt("language_id"));
+				film.setRating(rs.getString("rating"));
+				film.setDescription(rs.getString("description"));
+				film.setLanguage(rs.getString("name"));
+				film.setActors(findActorsByFilmId(film.getId()));
+				
+				if(film.getTitle().toLowerCase().contains(term.toLowerCase()) || (film.getDescription().toLowerCase().contains(term.toLowerCase()))){
+					movies.add(film);
+				}
+				
+			}
+		}
+		catch(SQLException e){
+			System.err.println("Database error - findFilmBySearch B ");
+			System.err.println(e);
+		}
+		return movies;
+	}
+
+}
 	
 	
 	
@@ -157,4 +201,4 @@ public class DatabaseAccessorObject implements DatabaseAccessor {
 //			return filmActors.toString();
 //		}
 
-}
+
