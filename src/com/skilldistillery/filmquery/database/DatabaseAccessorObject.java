@@ -31,17 +31,18 @@ public class DatabaseAccessorObject implements DatabaseAccessor {
 
 		try {
 			Connection conn = DriverManager.getConnection(URL, user, pass);
-			String sql = "SELECT *" + " FROM film WHERE id = ?";
+			String sql = "SELECT * FROM film JOIN language ON language.id = film.language_id WHERE film.id = ?;";
 			PreparedStatement stmt = conn.prepareStatement(sql);
 			stmt.setInt(1, filmId);
 			ResultSet rs = stmt.executeQuery();
-			if (rs.next()) {
+			while (rs.next()) {
 				film = new Film();
 				film.setId(rs.getInt("id"));
 				film.setTitle(rs.getString("title"));
 				film.setDescription(rs.getString("description"));
 				film.setReleaseYear(rs.getInt("release_year"));
 				film.setLanguageId(rs.getInt("language_id"));
+				film.setLanguage(rs.getString("name"));
 				film.setRentalDuration(rs.getInt("rental_duration"));
 				film.setRentalRate(rs.getDouble("rental_rate"));
 				film.setLength(rs.getInt("length"));
@@ -49,8 +50,6 @@ public class DatabaseAccessorObject implements DatabaseAccessor {
 				film.setRating(rs.getString("rating"));
 				film.setSpecialFeatures(rs.getString("special_features"));
 				film.setActors(findActorsByFilmId(filmId));
-				// TODO: call findActorsByFilmId(filmId)
-				// TODO: assign actors to film
 
 			}
 		} catch (SQLException e) {
@@ -107,7 +106,7 @@ public class DatabaseAccessorObject implements DatabaseAccessor {
 				actor.setLastName(rs.getString("last_name"));
 				filmActors.add(actor);
 			}
-			
+
 			conn.close();
 			stmt.close();
 			rs.close();
@@ -116,47 +115,49 @@ public class DatabaseAccessorObject implements DatabaseAccessor {
 			System.err.println("Database error - actors by film id");
 			System.err.println(e);
 		}
-		
-		if(filmActors.size() == 0) {
+
+		if (filmActors.size() == 0) {
 			return null;
 		}
-		
+
 		return filmActors;
 	}
-	
+
 	public List<Film> findFilmBySearch(String term) {
 		List<Film> movies = new ArrayList<Film>();
-		
+
 		try {
 			Connection conn = DriverManager.getConnection(URL, user, pass);
-			String sql = "SELECT film.title, film.id, film.release_year, film.rating, film.description, language.name "
-					+ "FROM film JOIN language on film.language_id = language.id;";
-			
+			String sql = "SELECT * " + "FROM film JOIN language on film.language_id = language.id;";
+
 			PreparedStatement stmt = conn.prepareStatement(sql);
 			ResultSet rs = stmt.executeQuery();
 
-			
-			while(rs.next()) {
+			while (rs.next()) {
 				Film film = new Film();
 				film = new Film();
-				
-				
+
 				film.setId(rs.getInt("id"));
 				film.setTitle(rs.getString("title"));
-				film.setReleaseYear(rs.getInt("release_year"));
-//				film.setLanguageId(rs.getInt("language_id"));
-				film.setRating(rs.getString("rating"));
 				film.setDescription(rs.getString("description"));
+				film.setReleaseYear(rs.getInt("release_year"));
+				film.setLanguageId(rs.getInt("language_id"));
 				film.setLanguage(rs.getString("name"));
+				film.setRentalDuration(rs.getInt("rental_duration"));
+				film.setRentalRate(rs.getDouble("rental_rate"));
+				film.setLength(rs.getInt("length"));
+				film.setReplacementCost(rs.getDouble("replacement_cost"));
+				film.setRating(rs.getString("rating"));
+				film.setSpecialFeatures(rs.getString("special_features"));
 				film.setActors(findActorsByFilmId(film.getId()));
-				
-				if(film.getTitle().toLowerCase().contains(term.toLowerCase()) || (film.getDescription().toLowerCase().contains(term.toLowerCase()))){
+
+				if (film.getTitle().toLowerCase().contains(term.toLowerCase())
+						|| (film.getDescription().toLowerCase().contains(term.toLowerCase()))) {
 					movies.add(film);
 				}
-				
+
 			}
-		}
-		catch(SQLException e){
+		} catch (SQLException e) {
 			System.err.println("Database error - findFilmBySearch B ");
 			System.err.println(e);
 		}
@@ -164,41 +165,3 @@ public class DatabaseAccessorObject implements DatabaseAccessor {
 	}
 
 }
-	
-	
-	
-	// Gonna try returning a string with the name of the film and actor info 
-		// instead of List<Actor> 
-//		@Override
-//		public String findActorsByFilmId(int filmId) {
-//			StringBuilder filmActors = new StringBuilder();
-//
-//			try {
-//				Connection conn = DriverManager.getConnection(URL, user, pass);
-//				String sql = "SELECT actor.id, actor.first_name, actor.last_name, film.title\n"
-//						+ "FROM actor JOIN film_actor ON actor.id = film_actor.actor_id\n"
-//						+ "JOIN film ON film.id = film_actor.film_id\n" + "WHERE film_id = ?;";
-//				PreparedStatement stmt = conn.prepareStatement(sql);
-//				stmt.setInt(1, filmId);
-//				ResultSet rs = stmt.executeQuery();
-//				while (rs.next()) {
-//					Actor actor = new Actor();
-//					Film film = new Film();
-//					film.setTitle(rs.getString("title"));
-//					filmActors.append(" Title: " +film.getTitle());
-//					actor.setId(rs.getInt("id"));
-//					filmActors.append(" Actor Id: " + String.valueOf(actor.getId()));
-//					actor.setFirstName(rs.getString("first_name"));
-//					actor.setLastName(rs.getString("last_name"));
-//					filmActors.append(" Name: " + actor.getFirstName() + " " + actor.getLastName());
-//				}
-//
-//			} catch (SQLException e) {
-//				System.err.println("Database error - actors by film id");
-//				System.err.println(e);
-//			}
-//
-//			return filmActors.toString();
-//		}
-
-
